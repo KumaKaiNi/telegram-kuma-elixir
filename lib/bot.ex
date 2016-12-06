@@ -76,40 +76,30 @@ defmodule KumaBot.Bot do
     end
 
     command ["s", "find", "search"] do
-      try do
-        [_ | search_term] = String.split(message.text)
+      [_ | search_term] = String.split(message.text)
 
-        reply send_chat_action "typing"
+      reply send_chat_action "typing"
 
-        query = search_term |> Enum.join(" ") |> URI.encode_www_form
-        request = "http://api.duckduckgo.com/?q=#{query}&skip_disambig=1&no_redirect=1&format=json&t=KumaBot" |> HTTPoison.get!
-        response = Poison.Parser.parse!((request.body), keys: :atoms)
-        answer = response."Answer"
-        result = response."AbstractURL"
-        text = response."AbstractText"
+      query = search_term |> Enum.join(" ") |> URI.encode_www_form
+      request = "http://api.duckduckgo.com/?q=#{query}&skip_disambig=1&no_redirect=1&format=json&t=KumaBot" |> HTTPoison.get!
+      response = Poison.Parser.parse!((request.body), keys: :atoms)
+      answer = response."Answer"
 
-        case result do
-          "" ->
-            answer = response."Answer"
+      case answer do
+        "" ->
+          result = response."AbstractURL"
+          text = response."AbstractText"
 
-            case answer do
-              "" -> reply send_message "Nothing found!"
-              answer -> reply send_message answer
-            end
-          result ->
-            try do
+          case result do
+            "" -> reply send_message "Nothing found!"
+            result ->
               case text do
                 "" -> reply send_message result
                 text -> reply send_message "#{text}\n\n#{result}", [disable_web_page_preview: true]
               end
-            rescue
-              error ->
-                reply send_message "fsdafsd"
-                Logger.log :warn, error
-            end
-        end
-      rescue
-        _ -> reply send_message "Nothing found!"
+          end
+        answer ->
+          reply send_message "#{answer}", [disable_web_page_preview: true]
       end
     end
 
