@@ -163,13 +163,13 @@ defmodule KumaBot.Bot do
               ["set" | location] = location
               location = location |> Enum.join
               uid = message.from.id
-              store_data("timezones", uid, location)
+              store_data("locations", uid, location)
               location
             location -> location
           end
         length(input) == 1 ->
           uid = message.from.id
-          query_data("timezones", uid)
+          query_data("locations", uid)
         true -> nil
       end
 
