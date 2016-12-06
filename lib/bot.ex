@@ -382,8 +382,8 @@ defmodule KumaBot.Bot do
                     store_data("bank", uid, receiver_coins + amount - tax |> round)
                     store_data("bank", -1, bank_coins + tax |> round)
 
-                    reply send_message "You sent #{amount - tax} to #{receiver}.\nYou now have #{sender_coins - amount - tax} coins. #{tax} was taxed and sent to the bank."
-                    send_message uid, "You received #{amount - tax} from #{sender}!\nYou now have #{receiver_coins + amount - tax} coins."
+                    reply send_message "You sent #{amount - tax} coins to #{receiver}. #{tax} coins were taxed and sent to the bank.\nYou now have #{sender_coins - amount - tax} coins."
+                    send_message uid, "You received #{amount - tax} coins from #{sender}!\nYou now have #{receiver_coins + amount - tax} coins."
                 end
           end
         end
