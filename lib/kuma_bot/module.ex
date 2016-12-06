@@ -146,7 +146,7 @@ defmodule KumaBot.Module do
           Task.async(fn -> unquote(function) end)
         end
 
-        store_data("bank", var!(message).from.id, coins - 1)
+        store_data("bank", var!(message).from.id, var!(coins) - 1)
       end
     end
   end
