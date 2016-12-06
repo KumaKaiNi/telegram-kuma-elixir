@@ -367,15 +367,15 @@ defmodule KumaBot.Bot do
                 bank_coins = query_data("bank", -1)
 
                 cond do
-                  sender_coins < amount -> reply send_message "You do not have enough coins."
+                  sender_coins < (amount + tax) -> reply send_message "You do not have enough coins."
                   true ->
                     receiver_coins = query_data("bank", uid)
                     store_data("bank", message.from.id, sender_coins - amount - tax)
                     store_data("bank", uid, receiver_coins + amount - tax)
                     store_data("bank", -1, bank_coins + tax)
 
-                    reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount} coins."
-                    send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount} coins."
+                    reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount - tax} coins. #{tax} was taxed and sent to the bank."
+                    send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount - tax} coins."
                 end
           end
         end
