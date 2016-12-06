@@ -113,7 +113,7 @@ defmodule KumaBot.Bot do
           case location |> List.first do
             "set" ->
               ["set" | location] = location
-              location = location |> Enum.join(" ")
+              location = location |> Enum.join
               uid = message.from.id
               store_data("locations", uid, location)
               location
@@ -161,7 +161,7 @@ defmodule KumaBot.Bot do
           case location |> List.first do
             "set" ->
               ["set" | location] = location
-              location = location |> Enum.join(" ")
+              location = location |> Enum.join
               uid = message.from.id
               store_data("timezones", uid, location)
               location
