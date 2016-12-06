@@ -113,11 +113,11 @@ defmodule KumaBot.Bot do
           case location |> List.first do
             "set" ->
               ["set" | location] = location
-              location = location |> Enum.join
+              location = location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
               uid = message.from.id
               store_data("locations", uid, location)
               location
-            location -> location
+            location -> location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
           end
         length(input) == 1 ->
           uid = message.from.id
@@ -161,11 +161,11 @@ defmodule KumaBot.Bot do
           case location |> List.first do
             "set" ->
               ["set" | location] = location
-              location = location |> Enum.join
+              location = location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
               uid = message.from.id
               store_data("locations", uid, location)
               location
-            location -> location
+            location -> location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
           end
         length(input) == 1 ->
           uid = message.from.id
