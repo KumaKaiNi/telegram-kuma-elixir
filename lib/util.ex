@@ -21,6 +21,19 @@ defmodule KumaBot.Util do
     filepath
   end
 
+  def download_dep(url) do
+    filename = url |> String.split("/") |> List.last
+    filepath = "_data/deps/#{filename}"
+
+    unless File.exists?(filepath) do
+      Logger.log :info, "Downloading #{filename}..."
+      image = url |> HTTPoison.get!
+      File.write filepath, image.body
+    end
+
+    filepath
+  end
+
   def is_dupe?(source, filename) do
     Logger.info "Checking if #{filename} was last posted..."
     file = query_data("dupes", source)
@@ -95,5 +108,41 @@ defmodule KumaBot.Util do
 
     :dets.close(table)
     response
+  end
+
+  def kuma_replies do
+    [
+      "http://vignette2.wikia.nocookie.net/kancolle/images/3/38/Kuma-Introduction.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/3/31/Kuma-Library.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/c/c3/Kuma-Secretary_2.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/f/f0/Kuma-Secretary_3.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/0/04/KumaKai-Idle.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/c/c0/Kuma-Looking_At_Scores.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/9/93/Kuma-Joining_A_Fleet.ogg",
+      "http://vignette3.wikia.nocookie.net/kancolle/images/7/77/Kuma-Equipment_1.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/d/d6/Kuma-Equipment_2.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/c/ca/Kuma-Equipment_3.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/c/c6/Kuma_Supply.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/2/21/KumaKai-Supply.ogg",
+      "http://vignette3.wikia.nocookie.net/kancolle/images/0/0b/Kuma-Docking_Minor.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/f/f2/Kuma-Docking_Major.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/a/ae/Kuma-Docking_Complete.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/5/57/Kuma-Construction.ogg",
+      "http://vignette3.wikia.nocookie.net/kancolle/images/7/7d/Kuma-Returning_From_Sortie.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/c/c5/Kuma-Starting_A_Sortie.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/5/51/Kuma-Battle_Start.ogg",
+      "http://vignette3.wikia.nocookie.net/kancolle/images/5/5c/Kuma-Attack.ogg",
+      "http://vignette3.wikia.nocookie.net/kancolle/images/2/24/Kuma-Night_Battle.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/8/83/Kuma-Night_Attack.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/d/d8/Kuma-MVP.ogg",
+      "http://vignette4.wikia.nocookie.net/kancolle/images/b/ba/Kuma-Minor_Damage_1.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/6/66/Kuma-Minor_Damage_2.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/d/d1/Kuma-Major_Damage.ogg",
+      "http://vignette1.wikia.nocookie.net/kancolle/images/d/d8/Kuma_Rainy_Season_2015.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/c/cc/Kuma_Mid-Summer_2015_Secretary_1.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/4/47/Kuma_Autumn_2015.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/3/35/Kuma_End_of_Year_2015.ogg",
+      "http://vignette2.wikia.nocookie.net/kancolle/images/2/22/Kuma_New_Year_2016.ogg"
+    ]
   end
 end

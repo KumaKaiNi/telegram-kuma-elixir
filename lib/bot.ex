@@ -4,16 +4,34 @@ defmodule KumaBot.Bot do
   require Logger
 
   handle :text do
+    name = message.from.first_name
+    user = query_data("users", message.from.id)
+
+    if user == nil or user != name do
+      store_data("users", message.from.id, name)
+    end
+
+    unless message.chat.type == "private" do
+      chat_users = query_data("chats", message.chat.id)
+
+      case chat_users do
+        nil -> store_data("chats", message.chat.id, [message.from.id])
+        chat_users ->
+          unless Enum.member?(chat_users, message.from.id) do
+            store_data("chats", message.chat.id, chat_users ++ [message.from.id])
+          end
+      end
+    end
+
     command "kuma" do
       Logger.warn "== DEBUG =="
       IO.inspect update
       Logger.warn "== DEBUG =="
 
-      # file = download_dep(Enum.random(kuma_replies))
-      # reply send_voice file
+      reply send_chat_action "record_audio"
 
-      # File.rm file
-      reply send_message "Kuma ~"
+      file = download_dep(Enum.random(kuma_replies))
+      reply send_voice file
     end
 
     command "help" do
@@ -31,8 +49,6 @@ defmodule KumaBot.Bot do
       /lewd - random nsfw danbooru post.
       /safe - random sfw danbooru post.
       /smug - sends a smug anime girl.
-
-      Chats are logged anonymously and used for random markov generation.
 
       Source (v3.0.0): https://github.com/KumaKaiNi/telegram-kuma-elixir
       """, [disable_web_page_preview: true]
@@ -54,6 +70,8 @@ defmodule KumaBot.Bot do
     command ["s", "find", "search"] do
       try do
         [_ | search_term] = String.split(message.text)
+
+        reply send_chat_action "typing"
 
         query = search_term |> Enum.join(" ") |> URI.encode_www_form
         request = "http://api.duckduckgo.com/?q=#{query}&format=json" |> HTTPoison.get!
@@ -138,6 +156,8 @@ defmodule KumaBot.Bot do
       response = Poison.Parser.parse!((request.body), keys: :atoms)
 
       try do
+        reply send_chat_action "upload_photo"
+
         result = response.data.images |> Enum.shuffle |> Enum.find(fn post -> is_image?(post.link) == true end)
         file = download result.link
 
@@ -164,6 +184,8 @@ defmodule KumaBot.Bot do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
+            reply send_chat_action "upload_photo"
+
             reply send_photo file, [caption: caption]
             File.rm file
           message -> reply send_message message
@@ -171,6 +193,8 @@ defmodule KumaBot.Bot do
       rescue
         _ ->
           {artist, post_id, file} = danbooru("order:rank", "")
+
+          reply send_chat_action "upload_photo"
 
           caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
@@ -188,6 +212,8 @@ defmodule KumaBot.Bot do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
+            reply send_chat_action "upload_photo"
+
             reply send_photo file, [caption: caption]
             File.rm file
           message -> reply send_message message
@@ -195,6 +221,8 @@ defmodule KumaBot.Bot do
       rescue
         _ ->
           {artist, post_id, file} = danbooru("order:rank", "rating:s")
+
+          reply send_chat_action "upload_photo"
 
           caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
@@ -212,6 +240,8 @@ defmodule KumaBot.Bot do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
+            reply send_chat_action "upload_photo"
+
             reply send_photo file, [caption: caption]
             File.rm file
           message -> reply send_message message
@@ -219,6 +249,8 @@ defmodule KumaBot.Bot do
       rescue
         _ ->
           {artist, post_id, file} = danbooru("order:rank", Enum.random(["rating:q", "rating:e"]))
+
+          reply send_chat_action "upload_photo"
 
           caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
@@ -242,6 +274,8 @@ defmodule KumaBot.Bot do
           end
 
         text = input |> Enum.join(" ")
+
+        reply send_chat_action "record_audio"
 
         url = "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php"
         body = [MyLanguages: "sonid10", MySelectedVoice: voice, MyTextForTTS: text, t: "1", SendToVaaS: ""]
@@ -279,9 +313,97 @@ defmodule KumaBot.Bot do
       end
     end
 
+    command "uid" do
+      uid = message.from.id
+
+      cond do
+        message.chat.type == "private" ->
+          reply send_message "Your user ID is `#{uid}`.",
+          [parse_mode: "Markdown"]
+        true ->
+          reply send_message "#{name}'s user ID is `#{uid}`.",
+          [parse_mode: "Markdown"]
+      end
+    end
+
     command "coins" do
       coins = query_data("bank", message.from.id)
-      reply send_message "You have #{coins} coins."
+
+      coins = case coins do
+        nil -> 0
+        coins -> coins
+      end
+
+      cond do
+        message.chat.type == "private" ->
+          reply send_message "You have #{coins} coins."
+        true ->
+          reply send_message "#{name} has #{coins} coins."
+      end
+    end
+
+    command "transfer" do
+      try do
+        [_ | query] = String.split(message.text)
+        [uid, amount | _] = query
+
+        uid = uid |> String.to_integer
+        amount = amount |> String.to_integer
+
+        receiver = query_data("users", uid)
+        sender = query_data("users", message.from.id)
+
+        case receiver do
+          nil -> reply send_message "That user doesn't exist in the bank."
+          receiver ->
+            sender_coins = query_data("bank", message.from.id)
+
+            cond do
+              sender_coins < amount -> reply send_message "You do not have enough coins."
+              true ->
+                receiver_coins = query_data("bank", uid)
+                store_data("bank", message.from.id, sender_coins - amount)
+                store_data("bank", uid, receiver_coins + amount)
+
+                reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount} coins."
+                send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount} coins."
+            end
+        end
+      rescue
+        _ -> reply send_message "That didn't work, make sure you're using the following format:\n\n`/transfer <user_id> <amount>`", [parse_mode: "Markdown"]
+      end
+    end
+
+    command ["score", "leaderboard"] do
+      case message.chat.type do
+        "private" ->
+          reply send_message "What? Okay, sure. You're #1. Good job!"
+        _ ->
+          members_count = reply get_chat_members_count
+
+          cond do
+            members_count < 3 -> reply send_message "You should have 3 or more members in this chat to check scores."
+            true ->
+              reply send_chat_action "typing"
+              members = query_data("chats", message.chat.id)
+
+              member_coins = for member <- members do
+                name = query_data("users", member)
+                coins = query_data("bank", member)
+
+                coins = case coins do
+                  nil -> 0
+                  coins -> coins
+                end
+
+                %{coins: coins, name: name}
+              end
+
+              member_coins = member_coins |> Enum.sort |> Enum.reverse
+
+              reply send_message "1: *#{Enum.at(member_coins,0).name}* (#{Enum.at(member_coins,0).coins})\n2: *#{Enum.at(member_coins,1).name}* (#{Enum.at(member_coins,1).coins})\n3: *#{Enum.at(member_coins,2).name}* (#{Enum.at(member_coins,2).coins})", [parse_mode: "Markdown"]
+          end
+      end
     end
 
     unless message.chat.type == "private" do

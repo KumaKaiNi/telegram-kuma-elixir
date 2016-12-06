@@ -1,5 +1,6 @@
 defmodule KumaBot do
   unless File.exists?("_data"), do: File.mkdir("_data")
+  unless File.exists?("_data/deps"), do: File.mkdir("_data/deps")
   unless File.exists?("_data/temp"), do: File.mkdir("_data/temp")
   unless File.exists?("_data/db"), do: File.mkdir("_data/db")
 
