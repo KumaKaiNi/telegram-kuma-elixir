@@ -140,13 +140,13 @@ defmodule KumaBot.Module do
       if var!(message) != nil do
         if var!(object) |> String.split |> List.first == "/" <> unquote(text) do
           Task.async(fn -> unquote(function) end)
+          store_data("bank", var!(message).from.id, var!(coins) - 1)
         end
 
         if var!(object) |> String.split |> List.first == "/" <> unquote(text) <> "@" <> unquote(@bot_name) do
           Task.async(fn -> unquote(function) end)
+          store_data("bank", var!(message).from.id, var!(coins) - 1)
         end
-
-        store_data("bank", var!(message).from.id, var!(coins) - 1)
       end
     end
   end
