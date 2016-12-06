@@ -17,6 +17,7 @@ defmodule KumaBot.Util do
     Logger.log :info, "Downloading #{filename}..."
     image = url |> HTTPoison.get!
     File.write filepath, image.body
+    Logger.log :info, "Download finished."
 
     filepath
   end
@@ -29,6 +30,7 @@ defmodule KumaBot.Util do
       Logger.log :info, "Downloading #{filename}..."
       image = url |> HTTPoison.get!
       File.write filepath, image.body
+      Logger.log :info, "Download finished."
     end
 
     filepath

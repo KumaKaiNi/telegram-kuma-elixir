@@ -358,17 +358,21 @@ defmodule KumaBot.Bot do
             receiver = query_data("users", uid)
             sender = query_data("users", message.from.id)
 
+            tax = amount * 0.1 |> Float.ceil
+
             case receiver do
               nil -> reply send_message "That user doesn't exist in the bank."
               receiver ->
                 sender_coins = query_data("bank", message.from.id)
+                bank_coins = query_data("bank", -1)
 
                 cond do
                   sender_coins < amount -> reply send_message "You do not have enough coins."
                   true ->
                     receiver_coins = query_data("bank", uid)
-                    store_data("bank", message.from.id, sender_coins - amount)
-                    store_data("bank", uid, receiver_coins + amount)
+                    store_data("bank", message.from.id, sender_coins - amount - tax)
+                    store_data("bank", uid, receiver_coins + amount - tax)
+                    store_data("bank", -1, bank_coins + tax)
 
                     reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount} coins."
                     send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount} coins."
