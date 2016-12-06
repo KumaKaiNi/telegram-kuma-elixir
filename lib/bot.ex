@@ -349,8 +349,6 @@ defmodule KumaBot.Bot do
     end
 
     command "transfer" do
-      store_data("bank", message.from.id, sender_coins - amount - tax |> round)
-
       try do
         [_ | query] = String.split(message.text)
         [uid, amount | _] = query
