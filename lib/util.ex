@@ -112,6 +112,9 @@ defmodule KumaBot.Util do
     response
   end
 
+  def celsius(fahrenheit), do: (fahrenheit - 32) * (5/9) |> round
+  def fahrenheit(celsius), do: (celsius * (5/9)) + 32 |> round
+
   def kuma_replies do
     [
       "http://vignette2.wikia.nocookie.net/kancolle/images/3/38/Kuma-Introduction.ogg",

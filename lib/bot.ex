@@ -103,6 +103,55 @@ defmodule KumaBot.Bot do
       end
     end
 
+    command "weather" do
+      input = message.text |> String.split
+
+      location = cond do
+        length(input) >= 2 ->
+          [_ | location] = message.text |> String.split
+
+          case location |> List.first do
+            "set" ->
+              ["set" | location] = location
+              location = location |> Enum.join(" ")
+              uid = message.from.id
+              store_data("locations", uid, location)
+              location
+            location -> location
+          end
+        length(input) == 1 ->
+          uid = message.from.id
+          query_data("locations", uid)
+        true -> nil
+      end
+
+      case location do
+        nil -> reply send_message "You're not in the database. Please use `/weather set <location>` or use `/weather <location>`.", [parse_mode: "Markdown"]
+        location ->
+          query = "select * from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"#{location}\")" |> URI.encode_www_form
+          request = "https://query.yahooapis.com/v1/public/yql?q=#{query}&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys" |> HTTPoison.get!
+
+          response = Poison.Parser.parse!((request.body), keys: :atoms)
+          weather = response.query.results.channel.item
+
+          forecast = List.first(weather.forecast)
+          high = forecast.high |> String.to_integer
+          low = forecast.low |> String.to_integer
+          current = weather.condition.temp |> String.to_integer
+          condition = weather.condition.text
+
+          reply send_message """
+          *#{weather.title}*
+
+          Current: *#{current}°F / #{celsius(current)}°C*
+          Condition: *#{condition}*
+
+          High: *#{high}°F / #{celsius(high)}°C*
+          Low: *#{low}°F / #{celsius(low)}°C*
+          """, [parse_mode: "Markdown"]
+      end
+    end
+
     command ["coin", "flip"] do
       reply send_message Enum.random(["Heads.", "Tails."])
     end
