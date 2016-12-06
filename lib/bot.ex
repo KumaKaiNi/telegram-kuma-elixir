@@ -82,7 +82,7 @@ defmodule KumaBot.Bot do
         reply send_chat_action "typing"
 
         query = search_term |> Enum.join(" ") |> URI.encode_www_form
-        request = "http://api.duckduckgo.com/?q=#{query}&format=json" |> HTTPoison.get!
+        request = "http://api.duckduckgo.com/?q=#{query}&skip_disambig=1&no_redirect=1&format=json" |> HTTPoison.get!
         response = Poison.Parser.parse!((request.body), keys: :atoms)
         result = response."AbstractURL"
         text = response."AbstractText"
