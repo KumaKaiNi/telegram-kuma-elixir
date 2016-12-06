@@ -350,24 +350,29 @@ defmodule KumaBot.Bot do
         uid = uid |> String.to_integer
         amount = amount |> String.to_integer
 
-        receiver = query_data("users", uid)
-        sender = query_data("users", message.from.id)
+        cond do
+          uid == message.from.id -> reply send_message "You can't send money to yourself."
+          amount <= 0 -> reply send_message "You have to send more than that."
+          true ->
+            receiver = query_data("users", uid)
+            sender = query_data("users", message.from.id)
 
-        case receiver do
-          nil -> reply send_message "That user doesn't exist in the bank."
-          receiver ->
-            sender_coins = query_data("bank", message.from.id)
+            case receiver do
+              nil -> reply send_message "That user doesn't exist in the bank."
+              receiver ->
+                sender_coins = query_data("bank", message.from.id)
 
-            cond do
-              sender_coins < amount -> reply send_message "You do not have enough coins."
-              true ->
-                receiver_coins = query_data("bank", uid)
-                store_data("bank", message.from.id, sender_coins - amount)
-                store_data("bank", uid, receiver_coins + amount)
+                cond do
+                  sender_coins < amount -> reply send_message "You do not have enough coins."
+                  true ->
+                    receiver_coins = query_data("bank", uid)
+                    store_data("bank", message.from.id, sender_coins - amount)
+                    store_data("bank", uid, receiver_coins + amount)
 
-                reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount} coins."
-                send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount} coins."
-            end
+                    reply send_message "You sent #{amount} to #{receiver}.\nYou now have #{sender_coins - amount} coins."
+                    send_message uid, "You received #{amount} from #{sender}!\nYou now have #{receiver_coins + amount} coins."
+                end
+          end
         end
       rescue
         _ -> reply send_message "That didn't work, make sure you're using the following format:\n\n`/transfer <user_id> <amount>`", [parse_mode: "Markdown"]
