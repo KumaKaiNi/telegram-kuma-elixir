@@ -128,27 +128,55 @@ defmodule KumaBot.Bot do
       case location do
         nil -> reply send_message "You're not in the database. Please use `/weather set <location>` or use `/weather <location>`.", [parse_mode: "Markdown"]
         location ->
-          query = "select * from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"#{location}\")" |> URI.encode_www_form
-          request = "https://query.yahooapis.com/v1/public/yql?q=#{query}&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys" |> HTTPoison.get!
+          location = location |> URI.encode_www_form
+          request = "https://api.apixu.com/v1/current.json?key=#{Application.get_env(:kuma_bot, :apixu)}&q=#{location}" |> HTTPoison.get!
 
-          response = Poison.Parser.parse!((request.body), keys: :atoms)
-          weather = response.query.results.channel.item
-
-          forecast = List.first(weather.forecast)
-          high = forecast.high |> String.to_integer
-          low = forecast.low |> String.to_integer
-          current = weather.condition.temp |> String.to_integer
-          condition = weather.condition.text
+          w = Poison.Parser.parse!((request.body), keys: :atoms)
 
           reply send_message """
-          *#{weather.title}*
+          *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
 
-          Current: *#{current}°F / #{celsius(current)}°C*
-          Condition: *#{condition}*
+          *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
+          *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
 
-          High: *#{high}°F / #{celsius(high)}°C*
-          Low: *#{low}°F / #{celsius(low)}°C*
+          *Condition:* #{w.current.condition.text}
+          *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
+          *Humidity:* #{w.current.humidity}%
           """, [parse_mode: "Markdown"]
+      end
+    end
+
+    command "time" do
+      input = message.text |> String.split
+
+      location = cond do
+        length(input) >= 2 ->
+          [_ | location] = message.text |> String.split
+
+          case location |> List.first do
+            "set" ->
+              ["set" | location] = location
+              location = location |> Enum.join(" ")
+              uid = message.from.id
+              store_data("timezones", uid, location)
+              location
+            location -> location
+          end
+        length(input) == 1 ->
+          uid = message.from.id
+          query_data("timezones", uid)
+        true -> nil
+      end
+
+      case location do
+        nil -> reply send_message "You're not in the database. Please use `/time set <location>` or use `/time <location>`.", [parse_mode: "Markdown"]
+        location ->
+          location = location |> URI.encode_www_form
+          request = "https://api.apixu.com/v1/current.json?key=#{Application.get_env(:kuma_bot, :apixu)}&q=#{location}" |> HTTPoison.get!
+
+          t = Poison.Parser.parse!((request.body), keys: :atoms)
+
+          reply send_message "It's *#{t.location.localtime}* in #{t.location.name}, #{t.location.region}, #{t.location.country}.", [parse_mode: "Markdown"]
       end
     end
 
