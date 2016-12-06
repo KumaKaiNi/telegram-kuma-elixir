@@ -82,13 +82,20 @@ defmodule KumaBot.Bot do
         reply send_chat_action "typing"
 
         query = search_term |> Enum.join(" ") |> URI.encode_www_form
-        request = "http://api.duckduckgo.com/?q=#{query}&skip_disambig=1&no_redirect=1&format=json" |> HTTPoison.get!
+        request = "http://api.duckduckgo.com/?q=#{query}&skip_disambig=1&no_redirect=1&format=json&t=KumaBot" |> HTTPoison.get!
         response = Poison.Parser.parse!((request.body), keys: :atoms)
+        answer = response."Answer"
         result = response."AbstractURL"
         text = response."AbstractText"
 
         case result do
-          "" -> reply send_message "Nothing found!"
+          "" ->
+            answer = response."Answer"
+
+            case answer do
+              "" -> reply send_message "Nothing found!"
+              answer -> reply send_message answer
+            end
           result ->
             try do
               case text do
