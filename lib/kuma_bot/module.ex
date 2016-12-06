@@ -145,6 +145,8 @@ defmodule KumaBot.Module do
         if var!(object) |> String.split |> List.first == "/" <> unquote(text) <> "@" <> unquote(@bot_name) do
           Task.async(fn -> unquote(function) end)
         end
+
+        store_data("bank", var!(message).from.id, coins - 1)
       end
     end
   end

@@ -6,6 +6,7 @@ defmodule KumaBot.Bot do
   handle :text do
     name = message.from.first_name
     user = query_data("users", message.from.id)
+    coins = query_data("bank", message.from.id)
 
     if user == nil or user != name do
       store_data("users", message.from.id, name)
@@ -20,6 +21,11 @@ defmodule KumaBot.Bot do
           unless Enum.member?(chat_users, message.from.id) do
             store_data("chats", message.chat.id, chat_users ++ [message.from.id])
           end
+      end
+
+      case coins do
+        nil -> store_data("bank", message.from.id, 1)
+        coins -> store_data("bank", message.from.id, coins + 1)
       end
     end
 
@@ -343,6 +349,8 @@ defmodule KumaBot.Bot do
     end
 
     command "transfer" do
+      store_data("bank", message.from.id, sender_coins - amount - tax |> round)
+
       try do
         [_ | query] = String.split(message.text)
         [uid, amount | _] = query
@@ -413,15 +421,6 @@ defmodule KumaBot.Bot do
 
               reply send_message "1: *#{Enum.at(member_coins,0).name}* (#{Enum.at(member_coins,0).coins})\n2: *#{Enum.at(member_coins,1).name}* (#{Enum.at(member_coins,1).coins})\n3: *#{Enum.at(member_coins,2).name}* (#{Enum.at(member_coins,2).coins})", [parse_mode: "Markdown"]
           end
-      end
-    end
-
-    unless message.chat.type == "private" do
-      coins = query_data("bank", message.from.id)
-
-      case coins do
-        nil -> store_data("bank", message.from.id, 1)
-        coins -> store_data("bank", message.from.id, coins + 1)
       end
     end
   end
