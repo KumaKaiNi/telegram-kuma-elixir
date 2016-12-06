@@ -29,6 +29,8 @@ defmodule KumaBot.Bot do
       end
     end
 
+    coins = coins + 1
+
     command "kuma" do
       Logger.warn "== DEBUG =="
       IO.inspect update
