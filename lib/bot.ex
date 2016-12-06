@@ -376,7 +376,7 @@ defmodule KumaBot.Bot do
           end
         end
       rescue
-        _ -> reply send_message "That didn't work, make sure you're using the following format:\n\n`/transfer <user_id> <amount>`", [parse_mode: "Markdown"]
+        _ -> reply send_message "That didn't work, make sure you're using the following format:\n\n`/transfer <user_id> <amount>`\n\nAlso be sure you're using the correct user id (which you can get by using /uid) and that you're sending full numbers.", [parse_mode: "Markdown"]
       end
     end
 
