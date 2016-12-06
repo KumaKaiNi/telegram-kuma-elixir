@@ -133,16 +133,21 @@ defmodule KumaBot.Bot do
 
           w = Poison.Parser.parse!((request.body), keys: :atoms)
 
-          reply send_message """
-          *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
+          case Map.get(w, :error) do
+            nil ->
+              reply send_message """
+              *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
 
-          *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
-          *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
+              *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
+              *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
 
-          *Condition:* #{w.current.condition.text}
-          *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
-          *Humidity:* #{w.current.humidity}%
-          """, [parse_mode: "Markdown"]
+              *Condition:* #{w.current.condition.text}
+              *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
+              *Humidity:* #{w.current.humidity}%
+              """, [parse_mode: "Markdown"]
+            error ->
+              reply send_message "#{error.message}"
+          end
       end
     end
 
@@ -176,7 +181,12 @@ defmodule KumaBot.Bot do
 
           t = Poison.Parser.parse!((request.body), keys: :atoms)
 
-          reply send_message "It's *#{t.location.localtime}* in #{t.location.name}, #{t.location.region}, #{t.location.country}.", [parse_mode: "Markdown"]
+          case Map.get(t, :error) do
+            nil ->
+              reply send_message "It's *#{t.location.localtime}* in #{t.location.name}, #{t.location.region}, #{t.location.country}.", [parse_mode: "Markdown"]
+            error ->
+              reply send_message "#{error.message}"
+          end
       end
     end
 
