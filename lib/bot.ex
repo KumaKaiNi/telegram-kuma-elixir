@@ -350,7 +350,7 @@ defmodule KumaBot.Bot do
       end
     end
 
-    command "transfer" do
+    command ["send", "transfer"] do
       try do
         [_ | query] = String.split(message.text)
         [uid, amount | _] = query
@@ -392,7 +392,7 @@ defmodule KumaBot.Bot do
       end
     end
 
-    command ["score", "leaderboard"] do
+    command ["scores", "leaderboard"] do
       case message.chat.type do
         "private" ->
           reply send_message "What? Okay, sure. You're #1. Good job!"
