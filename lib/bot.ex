@@ -353,6 +353,7 @@ defmodule KumaBot.Bot do
         cond do
           uid == message.from.id -> reply send_message "You can't send money to yourself."
           amount <= 0 -> reply send_message "You have to send more than that."
+          is_float(amount) -> reply send_message "You can't do that."
           true ->
             receiver = query_data("users", uid)
             sender = query_data("users", message.from.id)
