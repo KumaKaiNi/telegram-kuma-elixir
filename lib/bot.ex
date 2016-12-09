@@ -351,57 +351,52 @@ defmodule KumaBot.Bot do
       end
     end
 
-    command "tts" do
-      try do
-        [_ | message] = String.split(message.text)
-        [first_word | rest] = message
-        voice_input = first_word |> String.split(":")
-
-        {voice, input} =
-          cond do
-            length(voice_input) == 2 ->
-              [_ | voice] = voice_input
-              {hd(voice), rest}
-            true -> {"Will", message}
-          end
-
-        text = input |> Enum.join(" ")
-
-        reply send_chat_action "record_audio"
-
-        url = "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php"
-        body = [MyLanguages: "sonid10", MySelectedVoice: voice, MyTextForTTS: text, t: "1", SendToVaaS: ""]
-        head = %{"User-Agent" => "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.2.149.29 Safari/525.13", "Content-type" => "application/x-www-form-urlencoded"}
-
-        request = HTTPoison.post!(url, {:form, body}, head)
-        %{"mp3" => file_url} = Regex.named_captures(~r/(?<mp3>((http:\/\/)?(www)?[-a-zA-Z0-9@:%_\+.~#?\/=]+\.mp3))/, request.body)
-
-        file = download(file_url)
-
-        reply send_voice file
-        File.rm file
-      rescue
-        _ -> reply send_message "What?"
-      end
-    end
-
     command "projection", do: reply send_message "Psychological projection is a theory in psychology in which humans defend themselves against their own unpleasant impulses by denying their existence while attributing them to others. For example, a person who is rude may constantly accuse other people of being rude. It can take the form of blame shifting."
 
-    match ["hello", "hi", "hey", "sup"] do
-      replies = ["sup loser", "yo", "ay", "go away", "hi", "wassup"]
-      if one_to(25) do
-        reply send_message Enum.random(replies)
-      end
-    end
+    command "convert" do
+      try do
+        [_ | [amount | currency]] = message.text |> String.split
+        app_id = Application.get_env(:kuma_bot, :oxr_api)
 
-    match ["ty kuma", "thanks kuma", "thank you kuma"] do
-      replies = ["np", "don't mention it", "anytime", "sure thing", "ye whateva"]
-      reply send_message Enum.random(replies)
-    end
+        reply send_chat_action "typing"
 
-    match ["same", "Same", "SAME"] do
-      if one_to(25) do
-        reply send_message "same"
+        request = "https://openexchangerates.org/api/latest.json?app_id=#{app_id}" |> HTTPoison.get!
+        response = Poison.Parser.parse!((request.body), keys: :atoms)
+        rates = response.rates
+
+        {amount, currency_from} = case amount |> Float.parse do
+          :error -> {1.0, currency |> List.first |> String.upcase}
+          parsed -> parsed
+        end
+
+        amount = amount |> Float.round(2)
+
+        currency_from = case currency_from do
+          "" -> currency |> List.first |> String.upcase
+          currency_from -> currency_from |> String.upcase
+        end
+
+        currency_to = currency |> List.last |> String.upcase
+
+        from_rate = rates |> Map.get(currency_from |> String.to_atom)
+        to_rate = rates |> Map.get(currency_to |> String.to_atom)
+
+        cond do
+          from_rate == nil && to_rate == nil ->
+            reply send_message "Neither #{currency_from} or #{currency_to} are valid currencies."
+          from_rate == nil ->
+            reply send_message "#{currency_from} is not a valid currency."
+          to_rate == nil ->
+            reply send_message "#{currency_to} is not a valid currency."
+          true ->
+            exchange_rate = to_rate / from_rate
+            converted_amount = amount * exchange_rate
+
+            reply send_message "#{amount |> Float.to_string(decimals: 2)} #{currency_from} is #{converted_amount |> Float.to_string(decimals: 2)} #{currency_to}.\n\n1 #{currency_from} = #{exchange_rate |> Float.round(5)} #{currency_to}"
+        end
+      rescue
+        MatchError -> reply send_message "That didn't work. Be sure to use the format `/convert <amount> <from currency> <to currency>`.", [parse_mode: "Markdown"]
+        e in ArgumentError -> reply send_message e.message
       end
     end
 
@@ -505,6 +500,24 @@ defmodule KumaBot.Bot do
 
               reply send_message "1: *#{Enum.at(member_coins,0).name}* (#{Enum.at(member_coins,0).coins})\n2: *#{Enum.at(member_coins,1).name}* (#{Enum.at(member_coins,1).coins})\n3: *#{Enum.at(member_coins,2).name}* (#{Enum.at(member_coins,2).coins})", [parse_mode: "Markdown"]
           end
+      end
+    end
+
+    match ["hello", "hi", "hey", "sup"] do
+      replies = ["sup loser", "yo", "ay", "go away", "hi", "wassup"]
+      if one_to(25) do
+        reply send_message Enum.random(replies)
+      end
+    end
+
+    match ["ty kuma", "thanks kuma", "thank you kuma"] do
+      replies = ["np", "don't mention it", "anytime", "sure thing", "ye whateva"]
+      reply send_message Enum.random(replies)
+    end
+
+    match ["same", "Same", "SAME"] do
+      if one_to(25) do
+        reply send_message "same"
       end
     end
   end
