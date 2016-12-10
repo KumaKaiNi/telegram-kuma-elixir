@@ -375,11 +375,12 @@ defmodule KumaBot.Bot do
               "p" -> "png"
             end
 
-            artist_tag = result.tags |> Enum.find(fn(t) -> t.type == "artist" end)
+            artists_tag = result.tags |> Enum.filter(fn(t) -> t.type == "artist" end)
+            artists = for tag <- artists_tag, do: tag.name
 
-            artist = case artist_tag do
-              nil -> ""
-              artist -> "by #{artist.name}\n"
+            artist = case artists do
+              [] -> ""
+              artists -> "by #{artists |> Enum.join(", ")}\n"
             end
 
             cover = "https://t.nhentai.net/galleries/#{result.media_id}/cover.#{filetype}"
