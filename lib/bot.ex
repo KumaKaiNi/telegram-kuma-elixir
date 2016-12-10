@@ -359,32 +359,37 @@ defmodule KumaBot.Bot do
 
       request = "https://nhentai.net/api/galleries/search?query=#{tags}&sort=popular" |> HTTPoison.get!
       response = Poison.Parser.parse!((request.body), keys: :atoms)
-      result = response.result |> Enum.shuffle |> Enum.find(fn doujin -> is_dupe?("nhentai", doujin.id) == false end)
 
-      filetype = case result.images.cover.t do
-        "j" -> "jpg"
-        "g" -> "gif"
-        "p" -> "png"
+      try do
+        result = response.result |> Enum.shuffle |> Enum.find(fn doujin -> is_dupe?("nhentai", doujin.id) == false end)
+
+        filetype = case result.images.cover.t do
+          "j" -> "jpg"
+          "g" -> "gif"
+          "p" -> "png"
+        end
+
+        artist_tag = result.tags |> Enum.find(fn(t) -> t.type == "artist" end)
+
+        artist = case artist_tag do
+          nil -> ""
+          artist -> "by #{artist.name}\n"
+        end
+
+        cover = "https://t.nhentai.net/galleries/#{result.media_id}/cover.#{filetype}"
+        file = download cover
+
+        caption = """
+        #{result.title.pretty}
+        #{artist}
+        https://nhentai.net/g/#{result.id}
+        """
+
+        reply send_photo file, [caption: caption]
+        File.rm file
+      rescue
+        KeyError -> reply send_message "Nothing found!"
       end
-
-      artist_tag = result.tags |> Enum.find(fn(t) -> t.type == "artist" end)
-
-      artist = case artist_tag do
-        nil -> ""
-        artist -> "by #{artist.name}\n"
-      end
-
-      cover = "https://t.nhentai.net/galleries/#{result.media_id}/cover.#{filetype}"
-      file = download cover
-
-      caption = """
-      #{result.title.pretty}
-      #{artist}
-      https://nhentai.net/g/#{result.id}
-      """
-
-      reply send_photo file, [caption: caption]
-      File.rm file
     end
 
     command "projection", do: reply send_message "Psychological projection is a theory in psychology in which humans defend themselves against their own unpleasant impulses by denying their existence while attributing them to others. For example, a person who is rude may constantly accuse other people of being rude. It can take the form of blame shifting."
