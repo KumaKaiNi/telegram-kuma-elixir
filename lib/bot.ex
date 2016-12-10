@@ -380,7 +380,7 @@ defmodule KumaBot.Bot do
 
             artist = case artists do
               [] -> ""
-              artists -> "by #{artists |> Enum.join(", ")}\n"
+              artists -> "by #{artists |> Enum.sort |> Enum.join(", ")}\n"
             end
 
             cover = "https://t.nhentai.net/galleries/#{result.media_id}/cover.#{filetype}"
