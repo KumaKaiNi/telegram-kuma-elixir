@@ -354,8 +354,6 @@ defmodule KumaBot.Bot do
     command ["nhen", "nhentai", "doujin"] do
       [_ | tags] = message.text |> String.split
 
-      IO.inspect tags
-
       case tags do
         [] -> reply send_message "You must search with at least one tag."
         tags ->
