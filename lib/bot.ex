@@ -351,6 +351,43 @@ defmodule KumaBot.Bot do
       end
     end
 
+    command "tts" do
+      try do
+        [_ | message] = String.split(message.text)
+        [first_word | rest] = message
+        voice_input = first_word |> String.split(":")
+
+        {voice, input} =
+          cond do
+            length(voice_input) == 2 ->
+              [_ | voice] = voice_input
+              {hd(voice), rest}
+            true -> {"Will", message}
+          end
+
+        text = input |> Enum.join(" ")
+
+        reply send_chat_action "record_audio"
+
+        page = HTTPoison.get! "http://www.acapela-group.com/voices/demo/"
+        {"Set-Cookie", session} = page.headers |> Enum.find(fn(x) -> x |> Tuple.to_list |> Enum.member?("Set-Cookie") end)
+
+        url = "http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php?langdemo"
+        body = [MyLanguages: "sonid10", MySelectedVoice: voice, MyTextForTTS: text, t: "1", SendToVaaS: "", agreeterms: "on"]
+        head = %{"User-Agent" => "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.2.149.29 Safari/525.13", "Content-type" => "application/x-www-form-urlencoded", "Cookie" => session}
+
+        request = HTTPoison.post!(url, {:form, body}, head)
+        %{"mp3" => file_url} = Regex.named_captures(~r/(?<mp3>((http:\/\/)?(www)?[-a-zA-Z0-9@:%_\+.~#?\/=]+\.mp3))/, request.body)
+
+        file = download(file_url)
+
+        reply send_voice file
+        File.rm file
+      rescue
+        _ -> reply send_message "What?"
+      end
+    end
+
     command ["nhen", "nhentai", "doujin"] do
       [_ | tags] = message.text |> String.split
 
