@@ -19,7 +19,13 @@ defmodule KumaBot.Module do
       end
 
       def handle_info({:update, id}, state) do
-        new_id = get_updates([offset: id]) |> process_updates
+        try do
+          new_id = get_updates([offset: id]) |> process_updates
+        rescue
+          e in error ->
+            Logger.error "Error: #{e}"
+            new_id = -1
+        end
 
         :erlang.send_after(100, self, {:update, new_id + 1})
         {:noreply, state}
