@@ -369,7 +369,7 @@ defmodule KumaBot.Bot do
           try do
             result = response.result |> Enum.shuffle |> Enum.find(fn doujin -> is_dupe?("nhentai", doujin.id) == false end)
 
-            filetype = case result.images.cover.t do
+            filetype = case List.first(result.images.pages).t do
               "j" -> "jpg"
               "g" -> "gif"
               "p" -> "png"
@@ -383,7 +383,7 @@ defmodule KumaBot.Bot do
               artists -> "by #{artists |> Enum.sort |> Enum.join(", ")}\n"
             end
 
-            cover = "https://t.nhentai.net/galleries/#{result.media_id}/cover.#{filetype}"
+            cover = "https://i.nhentai.net/galleries/#{result.media_id}/1.#{filetype}"
             file = download cover
 
             caption = """
