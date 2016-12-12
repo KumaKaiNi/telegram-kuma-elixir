@@ -357,7 +357,9 @@ defmodule KumaBot.Bot do
       case tags do
         [] -> reply send_message "You must search with at least one tag."
         tags ->
-          tags = tags |> Enum.join("+") |> URI.encode_www_form
+          tags = for tag <- tags do
+            tag |> URI.encode_www_form
+          end |> Enum.join("+")
 
           reply send_chat_action "upload_photo"
 
