@@ -21,17 +21,18 @@ defmodule KumaBot.Module do
       def handle_info({:update, id}, state) do
         try do
           new_id = get_updates([offset: id]) |> process_updates
+
+          :erlang.send_after(100, self, {:update, new_id + 1})
+          {:noreply, state}
         rescue
           error ->
             Logger.error "!! ERROR !!"
             IO.inspect error
             Logger.error "!! ERROR !!"
 
-            new_id = -1
+            :erlang.send_after(100, self, {:update, 0})
+            {:noreply, state}
         end
-
-        :erlang.send_after(100, self, {:update, new_id + 1})
-        {:noreply, state}
       end
 
       def handle_info(_object, state), do: {:noreply, state}
@@ -45,6 +46,7 @@ defmodule KumaBot.Module do
             _error -> nil
           end
         end
+
         List.last(updates).update_id
       end
 
