@@ -22,8 +22,11 @@ defmodule KumaBot.Module do
         try do
           new_id = get_updates([offset: id]) |> process_updates
         rescue
-          e in error ->
-            Logger.error "Error: #{e}"
+          error ->
+            Logger.error "!! ERROR !!"
+            IO.inspect error
+            Logger.error "!! ERROR !!"
+
             new_id = -1
         end
 
