@@ -133,20 +133,24 @@ defmodule KumaBot.Bot do
 
           w = Poison.Parser.parse!((request.body), keys: :atoms)
 
-          case Map.get(w, :error) do
-            nil ->
-              reply send_message """
-              *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
+          case w do
+            %{} -> reply send_message "Too many requests. You'll have to wait a bit."
+            _ ->
+              case Map.get(w, :error) do
+                nil ->
+                  reply send_message """
+                  *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
 
-              *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
-              *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
+                  *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
+                  *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
 
-              *Condition:* #{w.current.condition.text}
-              *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
-              *Humidity:* #{w.current.humidity}%
-              """, [parse_mode: "Markdown"]
-            error ->
-              reply send_message "#{error.message}"
+                  *Condition:* #{w.current.condition.text}
+                  *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
+                  *Humidity:* #{w.current.humidity}%
+                  """, [parse_mode: "Markdown"]
+                error ->
+                  reply send_message "#{error.message}"
+              end
           end
       end
     end
