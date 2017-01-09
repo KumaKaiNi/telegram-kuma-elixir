@@ -599,7 +599,11 @@ defmodule KumaBot.Bot do
 
               member_coins = member_coins |> Enum.sort |> Enum.reverse
 
-              reply send_message "1: *#{Enum.at(member_coins,0).name}* (#{Enum.at(member_coins,0).coins})\n2: *#{Enum.at(member_coins,1).name}* (#{Enum.at(member_coins,1).coins})\n3: *#{Enum.at(member_coins,2).name}* (#{Enum.at(member_coins,2).coins})", [parse_mode: "Markdown"]
+              {scores, _} = Enum.flat_map_reduce(member_coins, 1, fn(m, acc) ->
+                {["#{acc}: *#{m.name}* (#{m.coins})\n"], acc + 1}
+              end)
+
+              reply send_message Enum.join(scores), [parse_mode: "Markdown"]
           end
       end
     end
