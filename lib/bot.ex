@@ -441,6 +441,17 @@ defmodule KumaBot.Bot do
       end
     end
 
+    command "me" do
+      [_ | text] = String.split(message.text)
+
+      case message do
+        %{from: %{first_name: name}} ->
+          reply send_message "#{name} #{text |> Enum.join(" ")}"
+        %{from: %{username: name}} ->
+          reply send_message "@#{name} #{text |> Enum.join(" ")}"
+      end
+    end
+
     command "projection", do: reply send_message "Psychological projection is a theory in psychology in which humans defend themselves against their own unpleasant impulses by denying their existence while attributing them to others. For example, a person who is rude may constantly accuse other people of being rude. It can take the form of blame shifting."
 
     command "convert" do
