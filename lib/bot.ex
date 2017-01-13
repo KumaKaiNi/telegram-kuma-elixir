@@ -133,8 +133,8 @@ defmodule KumaBot.Bot do
 
           w = Poison.Parser.parse!((request.body), keys: :atoms)
 
-          case w do
-            %{} -> reply send_message "Too many requests. You'll have to wait a bit."
+          case map_size(w) do
+            0 -> reply send_message "Too many requests. You'll have to wait a bit."
             _ ->
               case Map.get(w, :error) do
                 nil ->
