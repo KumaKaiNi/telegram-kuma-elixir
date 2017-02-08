@@ -4,32 +4,13 @@ defmodule KumaBot.Bot do
   require Logger
 
   handle :text do
-    name = message.from.first_name
-    user = query_data("users", message.from.id)
-    coins = query_data("bank", message.from.id)
+    rekyuu = Application.get_env(:kuma_bot, :rekyuu)
 
-    if user == nil or user != name do
-      store_data("users", message.from.id, name)
-    end
-
-    unless message.chat.type == "private" do
-      chat_users = query_data("chats", message.chat.id)
-
-      case chat_users do
-        nil -> store_data("chats", message.chat.id, [message.from.id])
-        chat_users ->
-          unless Enum.member?(chat_users, message.from.id) do
-            store_data("chats", message.chat.id, chat_users ++ [message.from.id])
-          end
-      end
-
-      case coins do
-        nil -> store_data("bank", message.from.id, 1)
-        coins -> store_data("bank", message.from.id, coins + 1)
+    command ["leave", "part"] do
+      if message.from.id == rekyuu do
+        leave_chat(message.chat.id)
       end
     end
-
-    coins = coins + 1
 
     command "kuma" do
       Logger.warn "== DEBUG =="
@@ -498,113 +479,6 @@ defmodule KumaBot.Bot do
       rescue
         MatchError -> reply send_message "That didn't work. Be sure to use the format `/convert <amount> <from currency> <to currency>`.", [parse_mode: "Markdown"]
         e in ArgumentError -> reply send_message e.message
-      end
-    end
-
-    command "uid" do
-      uid = message.from.id
-
-      cond do
-        message.chat.type == "private" ->
-          reply send_message "Your user ID is `#{uid}`.",
-          [parse_mode: "Markdown"]
-        true ->
-          reply send_message "#{name}'s user ID is `#{uid}`.",
-          [parse_mode: "Markdown"]
-      end
-    end
-
-    command "coins" do
-      coins = query_data("bank", message.from.id)
-
-      coins = case coins do
-        nil -> 0
-        coins -> coins
-      end
-
-      cond do
-        message.chat.type == "private" ->
-          reply send_message "You have #{coins} coins."
-        true ->
-          reply send_message "#{name} has #{coins} coins."
-      end
-    end
-
-    command ["send", "transfer"] do
-      try do
-        [_ | query] = String.split(message.text)
-        [uid, amount | _] = query
-
-        uid = uid |> String.to_integer
-        amount = amount |> String.to_integer
-
-        cond do
-          uid == message.from.id -> reply send_message "You can't send money to yourself."
-          amount < 10 -> reply send_message "You have to send more than 10 coins."
-          is_float(amount) -> reply send_message "You can't do that."
-          true ->
-            receiver = query_data("users", uid)
-            sender = query_data("users", message.from.id)
-
-            tax = amount * 0.1 |> round
-
-            case receiver do
-              nil -> reply send_message "That user doesn't exist in the bank."
-              receiver ->
-                sender_coins = query_data("bank", message.from.id)
-                bank_coins = query_data("bank", -1)
-
-                cond do
-                  sender_coins < (amount + tax) -> reply send_message "You do not have enough coins."
-                  true ->
-                    receiver_coins = query_data("bank", uid)
-                    store_data("bank", message.from.id, sender_coins - amount - tax |> round)
-                    store_data("bank", uid, receiver_coins + amount - tax |> round)
-                    store_data("bank", -1, bank_coins + tax |> round)
-
-                    reply send_message "You sent #{amount - tax} coins to #{receiver}. #{tax} coins were taxed and sent to the bank.\nYou now have #{sender_coins - amount - tax} coins."
-                    send_message uid, "You received #{amount - tax} coins from #{sender}!\nYou now have #{receiver_coins + amount - tax} coins."
-                end
-          end
-        end
-      rescue
-        _ -> reply send_message "That didn't work, make sure you're using the following format:\n\n`/transfer <user_id> <amount>`\n\nAlso be sure you're using the correct user id (which you can get by using /uid) and that you're sending full numbers.", [parse_mode: "Markdown"]
-      end
-    end
-
-    command ["scores", "leaderboard"] do
-      case message.chat.type do
-        "private" ->
-          reply send_message "What? Okay, sure. You're #1. Good job!"
-        _ ->
-          members_count = reply get_chat_members_count
-
-          cond do
-            members_count < 3 -> reply send_message "You should have 3 or more members in this chat to check scores."
-            true ->
-              reply send_chat_action "typing"
-              members = query_data("chats", message.chat.id)
-
-              member_coins = for member <- members do
-                name = query_data("users", member)
-                coins = query_data("bank", member)
-
-                coins = case coins do
-                  nil -> 0
-                  coins -> coins
-                end
-
-                %{coins: coins, name: name}
-              end
-
-              member_coins = member_coins |> Enum.sort |> Enum.reverse
-
-              {scores, _} = Enum.flat_map_reduce(member_coins, 1, fn(m, acc) ->
-                {["#{acc}: *#{m.name}* (#{m.coins})\n"], acc + 1}
-              end)
-
-              reply send_message Enum.join(scores), [parse_mode: "Markdown"]
-          end
       end
     end
 
