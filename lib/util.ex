@@ -53,7 +53,7 @@ defmodule KumaBot.Util do
   end
 
   def danbooru(tags) do
-    tags = for tag <- processed_tags do
+    tags = for tag <- tags do
       tag |> URI.encode_www_form
     end
 
