@@ -52,30 +52,50 @@ defmodule KumaBot.Util do
     end
   end
 
-  def danbooru(tag1, tag2) do
-    dan = "danbooru.donmai.us"
+  def danbooru(tags) do
+    tags = for tag <- processed_tags do
+      tag |> URI.encode_www_form
+    end
 
-    tag1 = tag1 |> URI.encode_www_form
-    tag2 = tag2 |> URI.encode_www_form
+    request_tags = tags |> Enum.take(6) |> Enum.join("+")
+    request_url = "https://danbooru.donmai.us/posts.json?limit=50&page=1&random=true&tags=#{request_tags}"
+    request_auth = [hackney: [basic_auth: {
+      Application.get_env(:kuma_bot, :danbooru_login),
+      Application.get_env(:kuma_bot, :danbooru_api_key)
+    }]]
 
-    request =
-      "http://#{dan}/posts.json?limit=50&page=1&tags=#{tag1}+#{tag2}"
-      |> HTTPoison.get!
+    request = request_url |> HTTPoison.get!(%{}, request_auth)
 
     try do
       results = Poison.Parser.parse!((request.body), keys: :atoms)
-      result = results |> Enum.shuffle |> Enum.find(fn post -> is_image?(post.file_url) == true && is_dupe?("dan", post.file_url) == false end)
+      result = results
+      |> Enum.shuffle
+      |> Enum.find(fn post ->
+        is_image?(post.file_url) == true
+        && is_dupe?(:dan, post.file_url) == false
+        && post.is_deleted == false
+      end)
 
-      artist = result.tag_string_artist |> String.split("_") |> Enum.join(" ")
+
+      image = if URI.parse(result.file_url).host do
+        result.file_url
+      else
+        "http://danbooru.donmai.us#{result.file_url}"
+      end
+
+      file = download image
       post_id = Integer.to_string(result.id)
-      file = download "http://#{dan}#{result.file_url}"
+      artist = result.tag_string_artist
+      |> String.split("_")
+      |> Enum.join(" ")
 
       {artist, post_id, file}
     rescue
       Enum.EmptyError -> "Nothing found!"
       UndefinedFunctionError -> "Nothing found!"
       error ->
-        Logger.warn error
+        Logger.error "error in danbooru"
+        IO.inspect error
         "fsdafsd"
     end
   end

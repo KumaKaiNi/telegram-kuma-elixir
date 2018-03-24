@@ -249,15 +249,14 @@ defmodule KumaBot.Bot do
 
     command ["dan", "danbooru"] do
       try do
-        [_ | search_term] = String.split(message.text)
-        [tag1 | tag2] = search_term
-
-        dan = cond do
-          length(tag2) >= 1 -> danbooru(tag1, List.first(tag2))
-          true -> danbooru(tag1, "")
+        request_tags = case length(message.text |> String.split) do
+          1 -> ["order:rank"]
+          _ ->
+            [_ | tags] = message.text |> String.split
+            tags
         end
 
-        case dan do
+        case danbooru(request_tags) do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
@@ -282,10 +281,14 @@ defmodule KumaBot.Bot do
 
     command ["safe", "sfw"] do
       try do
-        [_ | tag] = message.text |> String.split
-        dan = danbooru(tag |> List.first, "rating:s")
+        request_tags = case length(message.text |> String.split) do
+          1 -> ["order:rank", "rating:s"]
+          _ ->
+            [_ | tags] = message.text |> String.split
+            ["rating:s"] ++ tags
+        end
 
-        case dan do
+        case danbooru(request_tags) do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
@@ -310,10 +313,14 @@ defmodule KumaBot.Bot do
 
     command ["lewd", "nsfw"] do
       try do
-        [_ | tag] = message.text |> String.split
-        dan = danbooru(tag |> List.first, Enum.random(["rating:q", "rating:e"]))
+        request_tags = case length(message.text |> String.split) do
+          1 -> ["order:rank", "rating:e"]
+          _ ->
+            [_ | tags] = message.text |> String.split
+            ["rating:e"] ++ tags
+        end
 
-        case dan do
+        case danbooru(request_tags) do
           {artist, post_id, file} ->
             caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
 
