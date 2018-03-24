@@ -268,7 +268,7 @@ defmodule KumaBot.Bot do
         end
       rescue
         _ ->
-          {artist, post_id, file} = danbooru("order:rank", "")
+          {artist, post_id, file} = danbooru(["order:rank"])
 
           reply send_chat_action "upload_photo"
 
