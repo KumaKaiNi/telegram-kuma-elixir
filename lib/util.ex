@@ -83,13 +83,13 @@ defmodule KumaBot.Util do
         "http://danbooru.donmai.us#{result.file_url}"
       end
 
-      file = download image
+      # file = download image
       post_id = Integer.to_string(result.id)
       artist = result.tag_string_artist
       |> String.split("_")
       |> Enum.join(" ")
 
-      {artist, post_id, file}
+      {artist, post_id, image}
     rescue
       Enum.EmptyError -> "Nothing found!"
       UndefinedFunctionError -> "Nothing found!"
