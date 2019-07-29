@@ -156,7 +156,7 @@ defmodule KumaBot.Unsync do
     {:noreply, state}
   end
 
-  def handle_info({:ssl_closed, _payload, state) do
+  def handle_info({:ssl_closed, _payload}, state) do
     next = query_data(:unsync, "next")
     send self, next
   end
