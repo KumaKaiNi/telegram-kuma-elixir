@@ -3,6 +3,7 @@ defmodule KumaBot do
   unless File.exists?("_data/deps"), do: File.mkdir("_data/deps")
   unless File.exists?("_data/temp"), do: File.mkdir("_data/temp")
   unless File.exists?("_data/db"), do: File.mkdir("_data/db")
+  KumaBot.Util.store_data(:unsync, "pid", 0)
 
   def start(_type, _args) do
     import Supervisor.Spec

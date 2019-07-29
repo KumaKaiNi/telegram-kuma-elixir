@@ -309,10 +309,21 @@ defmodule KumaBot.Bot do
           message_tags
       end
 
-      reply send_message "Starting unsynced duty!"
+      pid = query_data(:unsync, "pid")
 
-      {:ok, pid} = KumaBot.Unsync.start_link(tags)
-      store_data(:unsync, "pid", pid)
+      if pid == 0 do
+        reply send_message "Starting unsynced duty!"
+
+        {:ok, pid} = KumaBot.Unsync.start_link(tags)
+        store_data(:unsync, "pid", pid)
+      else
+        Process.exit(pid, :shutdown)
+
+        reply send_message "Updating unsynced duty..."
+
+        {:ok, pid} = KumaBot.Unsync.start_link(tags)
+        store_data(:unsync, "pid", pid)
+      end
     end
 
     command ["stop", "dutycomplete"] do
@@ -320,6 +331,7 @@ defmodule KumaBot.Bot do
 
       Process.exit(pid, :shutdown)
       reply send_message "Duty complete!"
+      store_data(:unsync, "pid", 0)
     end
 
     command "tts" do
