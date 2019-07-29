@@ -22,12 +22,10 @@ defmodule KumaBot.Unsync do
     results = get_danbooru_listings(tags, 1) |> Enum.shuffle
     next = query_data(:unsync, "next")
 
-    if results == [] do
-      send self, {:update, :nothing_found}
-    else if next != nil do
-      send self, next
-    else
-      send self, {:update, tags, 1, 0, results}
+    cond do
+      results == [] -> send self, {:update, :nothing_found}
+      next != nil -> send self, next
+      true -> send self, {:update, tags, 1, 0, results}
     end
 
     {:ok, []}
