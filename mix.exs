@@ -28,7 +28,7 @@ defmodule KumaBot.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:httpoison, "~> 0.13"},
+    [{:httpoison, "~> 1.5.1"},
      {:poison, "~> 3.1"},
      {:nadia, git: "https://github.com/zhyu/nadia"}]
   end

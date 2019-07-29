@@ -248,99 +248,74 @@ defmodule KumaBot.Bot do
     end
 
     command ["dan", "danbooru"] do
-      try do
-        request_tags = case length(message.text |> String.split) do
-          1 -> ["order:rank"]
-          _ ->
-            [_ | tags] = message.text |> String.split
-            tags
-        end
-
-        case danbooru(request_tags) do
-          {artist, post_id, file} ->
-            caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-            reply send_chat_action "upload_photo"
-
-            reply send_photo file, [caption: caption]
-            File.rm file
-          message -> reply send_message message
-        end
-      rescue
+      tags = case length(message.text |> String.split) do
+        1 -> ["order:rank"]
         _ ->
-          {artist, post_id, file} = danbooru(["order:rank"])
+          [_ | message_tags] = message.text |> String.split
+          message_tags
+      end
 
+      case danbooru(tags) do
+        {image, caption} ->
           reply send_chat_action "upload_photo"
-
-          caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-          reply send_photo file, [caption: caption]
-          File.rm file
+          reply send_photo image, [caption: caption, parse_mode: "Markdown"]
+  
+          File.rm image
+        message -> reply send_message message
       end
     end
 
     command ["safe", "sfw"] do
-      try do
-        request_tags = case length(message.text |> String.split) do
-          1 -> ["order:rank", "rating:s"]
-          _ ->
-            [_ | tags] = message.text |> String.split
-            ["rating:s"] ++ tags
-        end
-
-        case danbooru(request_tags) do
-          {artist, post_id, file} ->
-            caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-            reply send_chat_action "upload_photo"
-
-            reply send_photo file, [caption: caption]
-            File.rm file
-          message -> reply send_message message
-        end
-      rescue
+      tags = case length(message.text |> String.split) do
+        1 -> ["order:rank", "rating:s"]
         _ ->
-          {artist, post_id, file} = danbooru(["order:rank", "rating:s"])
+          [_ | message_tags] = message.text |> String.split
+          message_tags
+      end
 
+      case danbooru(tags) do
+        {image, caption} ->
           reply send_chat_action "upload_photo"
-
-          caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-          reply send_photo file, [caption: caption]
-          File.rm file
+          reply send_photo image, [caption: caption, parse_mode: "Markdown"]
+  
+          File.rm image
+        message -> reply send_message message
       end
     end
 
     command ["lewd", "nsfw"] do
-      try do
-        request_tags = case length(message.text |> String.split) do
-          1 -> ["order:rank", "rating:e"]
-          _ ->
-            [_ | tags] = message.text |> String.split
-            ["rating:e"] ++ tags
-        end
-
-        case danbooru(request_tags) do
-          {artist, post_id, file} ->
-            caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-            reply send_chat_action "upload_photo"
-
-            reply send_photo file, [caption: caption]
-            File.rm file
-          message -> reply send_message message
-        end
-      rescue
+      tags = case length(message.text |> String.split) do
+        1 -> ["order:rank", "-rating:s"]
         _ ->
-          {artist, post_id, file} = danbooru(["order:rank", Enum.random(["rating:q", "rating:e"])])
-
-          reply send_chat_action "upload_photo"
-
-          caption = "Artist: #{artist}\n\nvia https://danbooru.donmai.us/posts/#{post_id}"
-
-          reply send_photo file, [caption: caption]
-          File.rm file
+          [_ | message_tags] = message.text |> String.split
+          message_tags
       end
+
+      case danbooru(tags) do
+        {image, caption} ->
+          reply send_chat_action "upload_photo"
+          reply send_photo image, [caption: caption, parse_mode: "Markdown"]
+  
+          File.rm image
+        message -> reply send_message message
+      end
+    end
+
+    command "unsync" do
+      tags = case length(message.text |> String.split) do
+        1 -> ["order:rank", "rating:s"]
+        _ ->
+          [_ | message_tags] = message.text |> String.split
+          message_tags
+      end
+
+      {:ok, pid} = KumaBot.Unsync.start_link(tags)
+      store_data(:unsync, "pid", pid)
+    end
+
+    command "dutycomplete" do
+      pid = query_data(:unsync, "pid")
+      Process.exit(pid, :shutdown)
     end
 
     command "tts" do

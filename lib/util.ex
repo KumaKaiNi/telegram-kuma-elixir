@@ -5,9 +5,20 @@ defmodule KumaBot.Util do
   def percent(n), do: Enum.random(1..100) <= n
 
   def is_image?(url) do
-    Logger.info "Checking if #{url} is an image..."
     image_types = [".jpg", ".jpeg", ".gif", ".png"]
     Enum.member?(image_types, Path.extname(url))
+  end  
+
+  def titlecase(title, mod) do
+    case title do
+      nil -> ""
+      _   ->
+        words = title |> String.split(mod)
+    
+        for word <- words do
+          word |> String.capitalize
+        end |> Enum.join(" ")
+    end
   end
 
   def download(url) do
@@ -53,12 +64,14 @@ defmodule KumaBot.Util do
   end
 
   def danbooru(tags) do
+    blacklist = Application.get_env(:kuma_bot, :blacklist)
+
     tags = for tag <- tags do
       tag |> URI.encode_www_form
     end
 
     request_tags = tags |> Enum.take(6) |> Enum.join("+")
-    request_url = "https://danbooru.donmai.us/posts.json?limit=50&page=1&random=true&tags=#{request_tags}"
+    request_url = "https://danbooru.donmai.us/posts.json?tags=#{request_tags}"
     request_auth = [hackney: [basic_auth: {
       Application.get_env(:kuma_bot, :danbooru_login),
       Application.get_env(:kuma_bot, :danbooru_api_key)
@@ -72,10 +85,10 @@ defmodule KumaBot.Util do
       |> Enum.shuffle
       |> Enum.find(fn post ->
         is_image?(post.file_url) == true
+        && (String.split(post.tag_string_general) -- blacklist) == String.split(post.tag_string_general)
         && is_dupe?(:dan, post.file_url) == false
         && post.is_deleted == false
       end)
-
 
       image = if URI.parse(result.file_url).host do
         result.file_url
@@ -83,13 +96,49 @@ defmodule KumaBot.Util do
         "http://danbooru.donmai.us#{result.file_url}"
       end
 
-      # file = download image
       post_id = Integer.to_string(result.id)
-      artist = result.tag_string_artist
-      |> String.split("_")
-      |> Enum.join(" ")
+      artist =
+        result.tag_string_artist
+        |> String.split("_")
+        |> Enum.join(" ")
+      character_tags = result.tag_string_character |> String.split
+      copyright_tags = result.tag_string_copyright |> String.split
 
-      {artist, post_id, image}
+      character_tags_cleaned = for tag <- character_tags do
+        tag
+        |> String.split("_(")
+        |> List.first
+        |> titlecase("_")
+      end |> Enum.uniq
+
+      copyright = 
+        copyright_tags 
+        |> List.first
+        |> titlecase("_")
+
+      characters = case length(character_tags_cleaned) do
+        1 -> character_tags_cleaned |> List.first
+        2 -> character_tags_cleaned |> Enum.join(" and ")
+        _ -> [
+              character_tags_cleaned
+              |> Enum.drop(-1)
+              |> Enum.join(", "), 
+              List.last(character_tags_cleaned)
+            ]
+            |> Enum.join(", and ")
+      end
+
+      caption_string = case characters do
+        ", and " -> "#{copyright}"
+        _ -> "#{characters} - #{copyright}"
+      end
+
+      caption = """
+      *#{caption_string}*
+      [Drawn by #{artist}](https://danbooru.donmai.us/posts/#{post_id})
+      """
+
+      {image, caption}
     rescue
       Enum.EmptyError -> "Nothing found!"
       UndefinedFunctionError -> "Nothing found!"
