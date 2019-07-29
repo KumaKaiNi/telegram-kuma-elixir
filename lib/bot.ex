@@ -310,16 +310,17 @@ defmodule KumaBot.Bot do
       end
 
       pid = query_data(:unsync, "pid")
+      chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
       if pid == 0 do
-        reply send_message "Starting unsynced duty!"
+        Nadia.send_message chat_id, "Starting unsynced duty!"
 
         {:ok, pid} = KumaBot.Unsync.start_link(tags)
         store_data(:unsync, "pid", pid)
       else
         Process.exit(pid, :shutdown)
 
-        reply send_message "Updating unsynced duty..."
+        Nadia.send_message chat_id, "Updating unsynced duty..."
 
         {:ok, pid} = KumaBot.Unsync.start_link(tags)
         store_data(:unsync, "pid", pid)
@@ -328,9 +329,10 @@ defmodule KumaBot.Bot do
 
     command ["stop", "dutycomplete"] do
       pid = query_data(:unsync, "pid")
+      chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
       Process.exit(pid, :shutdown)
-      reply send_message "Duty complete!"
+      Nadia.send_message chat_id, "Duty complete!"
       store_data(:unsync, "pid", 0)
     end
 
