@@ -25,11 +25,13 @@ defmodule KumaBot.Unsync do
       chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
       Nadia.send_message chat_id, "Nothing found!"
-      {:stop, {:shutdown, "Nothing found!"}, state}
+
+      KumaBot.Util.store_data(:unsync, "pid", 0)
+      {:stop, {:shutdown, "Nothing found!"}, []}
     else
       send self, {:update, tags, 1, 0, results}
     end
-    
+
     {:ok, []}
   end
 
@@ -104,6 +106,8 @@ defmodule KumaBot.Unsync do
               chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
               Nadia.send_message chat_id, "No more entries!"
+
+              KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
               :erlang.send_after(10000, self, {:update, tags, page, 0, results})
@@ -121,6 +125,8 @@ defmodule KumaBot.Unsync do
               chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
               Nadia.send_message chat_id, "No more entries!"
+              
+              KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
               send self, {:update, tags, page, 0, results}  
