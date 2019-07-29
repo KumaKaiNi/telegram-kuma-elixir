@@ -114,10 +114,10 @@ defmodule KumaBot.Unsync do
               KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
-              :erlang.send_after(10000, self, {:update, tags, page, 0, results})
+              :erlang.send_after(15000, self, {:update, tags, page, 0, results})
             end            
           true ->
-            :erlang.send_after(10000, self, {:update, tags, page, post + 1, results})
+            :erlang.send_after(15000, self, {:update, tags, page, post + 1, results})
         end
       true ->
         cond do
