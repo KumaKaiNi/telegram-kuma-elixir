@@ -306,7 +306,7 @@ defmodule KumaBot.Bot do
         1 -> ["order:rank", "-rating:s"]
         _ ->
           [_ | message_tags] = message.text |> String.split
-          message_tags
+          ["-rating:s"] ++ message_tags
       end
 
       pid = query_data(:unsync, "pid")
