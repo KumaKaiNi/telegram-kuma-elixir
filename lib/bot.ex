@@ -303,7 +303,7 @@ defmodule KumaBot.Bot do
 
     command "unsync" do
       tags = case length(message.text |> String.split) do
-        1 -> ["order:rank", "rating:s"]
+        1 -> ["order:rank", "-rating:s"]
         _ ->
           [_ | message_tags] = message.text |> String.split
           message_tags
