@@ -20,9 +20,12 @@ defmodule KumaBot.Unsync do
 
   def init({:ok, tags}) do
     results = get_danbooru_listings(tags, 1) |> Enum.shuffle
+    next = query_data(:unsync, "next")
 
     if results == [] do
       send self, {:update, :nothing_found}
+    else if next != nil do
+      send self, next
     else
       send self, {:update, tags, 1, 0, results}
     end
@@ -111,13 +114,18 @@ defmodule KumaBot.Unsync do
 
               Nadia.send_message chat_id, "No more entries!"
 
+              KumaBot.Util.store_data(:unsync, "next", nil)
               KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
-              :erlang.send_after(15000, self, {:update, tags, page, 0, results})
+              next = {:update, tags, page, 0, results}
+              KumaBot.Util.store_data(:unsync, "next", next)
+              :erlang.send_after(15000, self, next)
             end            
           true ->
-            :erlang.send_after(15000, self, {:update, tags, page, post + 1, results})
+            next = {:update, tags, page, post + 1, results}
+            KumaBot.Util.store_data(:unsync, "next", next)
+            :erlang.send_after(15000, self, next)
         end
       true ->
         cond do
@@ -130,16 +138,26 @@ defmodule KumaBot.Unsync do
 
               Nadia.send_message chat_id, "No more entries!"
 
+              KumaBot.Util.store_data(:unsync, "next", nil)
               KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
-              send self, {:update, tags, page, 0, results}  
-            end                      
+              next = {:update, tags, page, 0, results}
+              KumaBot.Util.store_data(:unsync, "next", next)
+              send self, next
+            end
           true ->
-            send self, {:update, tags, page, post + 1, results}
+            next = {:update, tags, page, post + 1, results}
+            KumaBot.Util.store_data(:unsync, "next", next)
+            send self, next
         end
     end
 
     {:noreply, state}
+  end
+
+  def handle_info({:ssl_closed, _payload, state) do
+    next = query_data(:unsync, "next")
+    send self, next
   end
 end
