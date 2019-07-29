@@ -30,7 +30,7 @@ defmodule KumaBot.Unsync do
     {:ok, []}
   end
 
-  def handle_info({:update, :nothing_found}) do
+  def handle_info({:update, :nothing_found}, state) do
     chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
     Nadia.send_message chat_id, "Nothing found!"
