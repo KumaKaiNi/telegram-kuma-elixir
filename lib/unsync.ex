@@ -22,17 +22,21 @@ defmodule KumaBot.Unsync do
     results = get_danbooru_listings(tags, 1) |> Enum.shuffle
 
     if results == [] do
-      chat_id = Application.get_env(:kuma_bot, :rekcoa)
-
-      Nadia.send_message chat_id, "Nothing found!"
-
-      KumaBot.Util.store_data(:unsync, "pid", 0)
-      {:stop, {:shutdown, "Nothing found!"}, []}
+      send self, {:update, :nothing_found}
     else
       send self, {:update, tags, 1, 0, results}
     end
 
     {:ok, []}
+  end
+
+  def handle_info({:update, :nothing_found}) do
+    chat_id = Application.get_env(:kuma_bot, :rekcoa)
+
+    Nadia.send_message chat_id, "Nothing found!"
+
+    KumaBot.Util.store_data(:unsync, "pid", 0)
+    {:stop, {:shutdown, "Nothing found!"}, []}
   end
 
   def handle_info({:update, tags, page, post, results}, state) do
@@ -125,7 +129,7 @@ defmodule KumaBot.Unsync do
               chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
               Nadia.send_message chat_id, "No more entries!"
-              
+
               KumaBot.Util.store_data(:unsync, "pid", 0)
               {:stop, {:shutdown, "No more entries!"}, state}
             else
