@@ -332,7 +332,7 @@ defmodule KumaBot.Bot do
       chat_id = Application.get_env(:kuma_bot, :rekcoa)
       Nadia.send_message chat_id, "Resuming unsynced duty!"
 
-      {:ok, pid} = KumaBot.Unsync.start_link(tags)
+      {:ok, pid} = KumaBot.Unsync.start_link()
       store_data(:unsync, "pid", pid)
     end
 
