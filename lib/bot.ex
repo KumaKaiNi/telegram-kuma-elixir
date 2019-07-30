@@ -320,6 +320,8 @@ defmodule KumaBot.Bot do
         store_data(:unsync, "pid", pid)
       else
         Process.exit(pid, :shutdown)
+        store_data(:unsync, "pid", 0)
+        KumaBot.Util.store_data(:unsync, "next", nil)
 
         Nadia.send_message chat_id, "Updating unsynced duty..."
 
