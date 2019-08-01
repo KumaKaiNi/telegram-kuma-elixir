@@ -342,9 +342,13 @@ defmodule KumaBot.Bot do
       pid = query_data(:unsync, "pid")
       chat_id = Application.get_env(:kuma_bot, :rekcoa)
 
-      Process.exit(pid, :shutdown)
-      Nadia.send_message chat_id, "Duty complete!"
-      store_data(:unsync, "pid", 0)
+      try do
+        Process.exit(pid, :shutdown)
+        Nadia.send_message chat_id, "Duty complete!"
+        store_data(:unsync, "pid", 0)
+      rescue
+        _ -> nil
+      end
     end
 
     command "tts" do
