@@ -331,8 +331,11 @@ defmodule KumaBot.Bot do
     end
 
     command "resume" do
+      pid = query_data(:unsync, "pid")
       chat_id = Application.get_env(:kuma_bot, :rekcoa)
       Nadia.send_message chat_id, "Resuming unsynced duty!"
+
+      if pid != 0, do: Process.exit(pid, :shutdown)
 
       {:ok, pid} = KumaBot.Unsync.start_link()
       store_data(:unsync, "pid", pid)
