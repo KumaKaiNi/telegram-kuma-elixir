@@ -84,57 +84,60 @@ defmodule KumaBot.Bot do
       end
     end
 
-    command "weather" do
-      input = message.text |> String.split
+    # Hiding until I care enough to fix the endpoint
+    # %{"0": "#################################################################################################################################", "1": "#
+    # #", "2": "# IMPORTANT - PLEASE UPDATE YOUR API ENDPOINT                                                                                   #", "3": "#
+    # #", "4": "# This API endpoint is deprecated and has now been shut down. To keep using the apixu API, please update your integration       #", "5": "# to use the new weatherstack API endpoint, designed as a simple drop-in replacement.                                           #", "6": "# You will be required to create an account at https://weatherstack.com and obtain an API access key.                           #", "7": "#                                                                                                                               #", "8": "# For more information on how to upgrade please visit our Github Tutorial at: https://github.com/apilayer/weatherstack#readme   #", "9": "#                                                                                                                               #", a: "#################################################################################################################################"}
+    # command "weather" do
+    #   input = message.text |> String.split
 
-      location = cond do
-        length(input) >= 2 ->
-          [_ | location] = message.text |> String.split
+    #   location = cond do
+    #     length(input) >= 2 ->
+    #       [_ | location] = message.text |> String.split
 
-          cond do
-            location |> List.first == "set" ->
-              ["set" | location] = location
-              location = location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
-              uid = message.from.id
-              store_data("locations", uid, location)
-              location
-            true -> location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
-          end
-        length(input) == 1 ->
-          uid = message.from.id
-          query_data("locations", uid)
-        true -> nil
-      end
+    #       cond do
+    #         location |> List.first == "set" ->
+    #           ["set" | location] = location
+    #           location = location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
+    #           uid = message.from.id
+    #           store_data("locations", uid, location)
+    #           location
+    #         true -> location |> Enum.join(" ") |> String.split(", ") |> Enum.join(",")
+    #       end
+    #     length(input) == 1 ->
+    #       uid = message.from.id
+    #       query_data("locations", uid)
+    #     true -> nil
+    #   end
+    #   case location do
+    #     nil -> reply send_message "You're not in the database. Please use `/weather set <location>` or use `/weather <location>`.", [parse_mode: "Markdown"]
+    #     location ->
+    #       location = location |> URI.encode_www_form
+    #       request = "https://api.apixu.com/v1/current.json?key=#{Application.get_env(:kuma_bot, :apixu)}&q=#{location}" |> HTTPoison.get!
 
-      case location do
-        nil -> reply send_message "You're not in the database. Please use `/weather set <location>` or use `/weather <location>`.", [parse_mode: "Markdown"]
-        location ->
-          location = location |> URI.encode_www_form
-          request = "https://api.apixu.com/v1/current.json?key=#{Application.get_env(:kuma_bot, :apixu)}&q=#{location}" |> HTTPoison.get!
+    #       w = Poison.Parser.parse!((request.body), keys: :atoms)
 
-          w = Poison.Parser.parse!((request.body), keys: :atoms)
+    #       case map_size(w) do
+    #         0 -> reply send_message "Too many requests. You'll have to wait a bit."
+    #         _ ->
+    #           case Map.get(w, :error) do
+    #             nil ->
+    #               reply send_message """
+    #               *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
 
-          case map_size(w) do
-            0 -> reply send_message "Too many requests. You'll have to wait a bit."
-            _ ->
-              case Map.get(w, :error) do
-                nil ->
-                  reply send_message """
-                  *Conditions for #{w.location.name}, #{w.location.region}, #{w.location.country}*
+    #               *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
+    #               *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
 
-                  *Current:* #{w.current.temp_f |> round}°F / #{w.current.temp_c |> round}°C
-                  *Feels like:* #{w.current.feelslike_f |> round}°F / #{w.current.feelslike_c |> round}°C
-
-                  *Condition:* #{w.current.condition.text}
-                  *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
-                  *Humidity:* #{w.current.humidity}%
-                  """, [parse_mode: "Markdown"]
-                error ->
-                  reply send_message "#{error.message}"
-              end
-          end
-      end
-    end
+    #               *Condition:* #{w.current.condition.text}
+    #               *Wind:* #{w.current.wind_mph} MPH / #{w.current.wind_kph} KPH #{w.current.wind_dir}
+    #               *Humidity:* #{w.current.humidity}%
+    #               """, [parse_mode: "Markdown"]
+    #             error ->
+    #               reply send_message "#{error.message}"
+    #           end
+    #       end
+    #   end
+    # end
 
     command "time" do
       input = message.text |> String.split
@@ -259,7 +262,7 @@ defmodule KumaBot.Bot do
         {image, caption} ->
           reply send_chat_action "upload_photo"
           reply send_photo image, [caption: caption, parse_mode: "Markdown"]
-  
+
           File.rm image
         message -> reply send_message message
       end
@@ -277,7 +280,7 @@ defmodule KumaBot.Bot do
         {image, caption} ->
           reply send_chat_action "upload_photo"
           reply send_photo image, [caption: caption, parse_mode: "Markdown"]
-  
+
           File.rm image
         message -> reply send_message message
       end
@@ -295,7 +298,7 @@ defmodule KumaBot.Bot do
         {image, caption} ->
           reply send_chat_action "upload_photo"
           reply send_photo image, [caption: caption, parse_mode: "Markdown"]
-  
+
           File.rm image
         message -> reply send_message message
       end
