@@ -220,14 +220,6 @@ defmodule KumaBot.Bot do
       end
     end
 
-    command "message" do
-      request = "http://souls.riichi.me/api" |> HTTPoison.get!
-      response = Poison.Parser.parse!((request.body), keys: :atoms)
-      m = response.message
-
-      reply send_message m
-    end
-
     command "smug" do
       url = "https://api.imgur.com/3/album/zSNC1"
       auth = %{"Authorization" => "Client-ID #{Application.get_env(:kuma_bot, :imgur_client_id)}"}
@@ -273,7 +265,7 @@ defmodule KumaBot.Bot do
         1 -> ["order:rank", "rating:s"]
         _ ->
           [_ | message_tags] = message.text |> String.split
-          message_tags
+          ["rating:s"] ++ message_tags
       end
 
       case danbooru(tags) do
@@ -291,7 +283,7 @@ defmodule KumaBot.Bot do
         1 -> ["order:rank", "-rating:s"]
         _ ->
           [_ | message_tags] = message.text |> String.split
-          message_tags
+          ["-rating:s"] ++ message_tags
       end
 
       case danbooru(tags) do
