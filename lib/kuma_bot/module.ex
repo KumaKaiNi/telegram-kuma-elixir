@@ -51,7 +51,7 @@ defmodule KumaBot.Module do
 
             message_text = cond do
               Map.has_key?(update.message, :text) -> case update.message.text do
-                nil  -> message.caption
+                nil  -> update.message.caption
                 text -> text
               end
               Map.has_key?(update.message, :caption) -> update.message.caption
