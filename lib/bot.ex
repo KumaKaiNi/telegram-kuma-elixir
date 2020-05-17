@@ -6,28 +6,6 @@ defmodule KumaBot.Bot do
   handle :text do
     rekyuu = Application.get_env(:kuma_bot, :rekyuu)
 
-    chat_title = cond do
-      Map.has_key?(message.chat, :title) -> case message.chat.title do
-        nil -> "private"
-        title -> title
-      end
-      true -> "private"
-    end
-
-    message_text = cond do
-      Map.has_key?(message, :text) -> case message.text do
-        nil  -> message.caption
-        text -> text
-      end
-      Map.has_key?(message, :caption) -> message.caption
-      true -> nil
-    end
-
-    case message_text do
-      nil -> nil
-      message_text -> Logger.info("[#{chat_title}] #{message.from.first_name}: #{message_text}")
-    end
-
     command ["leave", "part"] do
       if message.from.id == rekyuu do
         leave_chat(message.chat.id)

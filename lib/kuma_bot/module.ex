@@ -41,6 +41,28 @@ defmodule KumaBot.Module do
       def process_updates({:ok, updates}) do
         for update <- updates do
           try do
+            chat_title = cond do
+              Map.has_key?(update.message.chat, :title) -> case update.message.chat.title do
+                nil -> "private"
+                title -> title
+              end
+              true -> "private"
+            end
+
+            message_text = cond do
+              Map.has_key?(update.message, :text) -> case update.message.text do
+                nil  -> message.caption
+                text -> text
+              end
+              Map.has_key?(update.message, :caption) -> update.message.caption
+              true -> nil
+            end
+
+            case message_text do
+              nil -> nil
+              message_text -> Logger.info("[#{chat_title}] #{update.message.from.first_name}: #{message_text}")
+            end
+
             unless Application.get_env(:kuma_bot, :halt_updates) do
               update |> process_update
             end
