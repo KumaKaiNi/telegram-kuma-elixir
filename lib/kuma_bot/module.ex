@@ -41,7 +41,9 @@ defmodule KumaBot.Module do
       def process_updates({:ok, updates}) do
         for update <- updates do
           try do
-            update |> process_update
+            unless Application.get_env(:kuma_bot, :halt_updates) do
+              update |> process_update
+            end
           rescue
             _error -> nil
           end
