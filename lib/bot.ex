@@ -6,10 +6,8 @@ defmodule KumaBot.Bot do
   handle :text do
     rekyuu = Application.get_env(:kuma_bot, :rekyuu)
 
-    whitelist = query_data("config", "whitelist")
-    blacklist = query_data("config", "blacklist")
-    if !whitelist, do: whitelist = []
-    if !blacklist, do: blacklist = []
+    whitelist = query_data("config", "whitelist") || []
+    blacklist = query_data("config", "blacklist") || []
 
     command ["approve"] do
       if message.from.id == rekyuu do
