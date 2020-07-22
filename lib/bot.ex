@@ -43,7 +43,7 @@ defmodule KumaBot.Bot do
 
       if current_warnings < 3 do
         store_data("warnings", message.chat.id, current_warnings + 1)
-      else if current_warnings >= 3 do
+      else
         leave_chat(message.chat.id)
         store_data("config", "blacklist", blacklist ++ [message.chat.id])
       end
