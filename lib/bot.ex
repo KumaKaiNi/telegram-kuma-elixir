@@ -13,6 +13,7 @@ defmodule KumaBot.Bot do
 
     command ["approve"] do
       if message.from.id == rekyuu do
+        reply "This chat has been added to the whitelist."
         store_data("config", "whitelist", whitelist ++ [message.chat.id])
       end
     end
