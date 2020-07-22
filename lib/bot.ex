@@ -38,8 +38,7 @@ defmodule KumaBot.Bot do
     end
 
     if message.chat.id not in whitelist and message.chat.id not in blacklist do
-      current_warnings = query_data("warnings", message.chat.id)
-      if !current_warnings, do: current_warnings = 0
+      current_warnings = query_data("warnings", message.chat.id) || 0
 
       if current_warnings < 3 do
         store_data("warnings", message.chat.id, current_warnings + 1)
