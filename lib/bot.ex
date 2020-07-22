@@ -12,12 +12,14 @@ defmodule KumaBot.Bot do
     command ["approve"] do
       if message.from.id == rekyuu do
         reply send_message "This chat has been added to the whitelist."
+        Logger.warn "Whitelisting chat ID #{message.chat.id}"
         store_data("config", "whitelist", whitelist ++ [message.chat.id])
       end
     end
 
     command ["leave", "part"] do
       if message.from.id == rekyuu do
+        Logger.warn "Leaving chat ID #{message.chat.id}"
         leave_chat(message.chat.id)
       end
     end
@@ -35,6 +37,7 @@ defmodule KumaBot.Bot do
 
     if message.chat.id in blacklist do
       leave_chat(message.chat.id)
+      Logger.warn "Leaving chat ID #{message.chat.id}"
     end
 
     if message.chat.id not in whitelist and message.chat.id not in blacklist do
@@ -44,6 +47,7 @@ defmodule KumaBot.Bot do
         store_data("warnings", message.chat.id, current_warnings + 1)
       else
         leave_chat(message.chat.id)
+        Logger.warn "Blacklisting chat ID #{message.chat.id}"
         store_data("config", "blacklist", blacklist ++ [message.chat.id])
       end
     else
