@@ -37,7 +37,9 @@ defmodule KumaBot.Bot do
 
     if message.chat.id in blacklist do
       leave_chat(message.chat.id)
-    else if message.chat.id not in whitelist do
+    end
+
+    if message.chat.id not in whitelist and message.chat.id not in blacklist do
       current_warnings = query_data("warnings", message.chat.id)
       if !current_warnings, do: current_warnings = 0
 
