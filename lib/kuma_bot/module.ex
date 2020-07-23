@@ -60,7 +60,7 @@ defmodule KumaBot.Module do
 
             case message_text do
               nil -> nil
-              message_text -> Logger.info("[#{chat_title}] #{update.message.from.first_name}: #{message_text}")
+              message_text -> Logger.info("[#{chat_title} (#{update.message.chat.id})] #{update.message.from.first_name}: #{message_text}")
             end
 
             unless Application.get_env(:kuma_bot, :halt_updates) do

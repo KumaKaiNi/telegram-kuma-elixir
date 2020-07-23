@@ -49,6 +49,7 @@ defmodule KumaBot.Bot do
         leave_chat(message.chat.id)
         Logger.warn "Blacklisting chat ID #{message.chat.id}"
         store_data("config", "blacklist", blacklist ++ [message.chat.id])
+        leave_chat(message.chat.id)
       end
     else
       command "help" do
